@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
+import { Suspense } from 'react';
 import { products, getProductBySlug, getAllProducts } from '@/data/products';
 import { ProductDetailClient } from '@/components/ProductDetailClient';
 
@@ -62,7 +63,37 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
 }
 
-export default async function ProductDetailPage({ params }: PageProps) {
+function ProductLoadingSkeleton() {
+    return (
+        <div className="bg-slate-50 text-slate-900 min-h-screen animate-pulse">
+            <div className="border-b border-slate-200 bg-white py-3 px-4 sm:px-6 lg:px-8">
+                <div className="max-w-7xl mx-auto h-4 w-48 bg-slate-200 rounded" />
+            </div>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+                    <div className="lg:col-span-6 space-y-4">
+                        <div className="aspect-4/3 rounded-2xl bg-slate-200" />
+                        <div className="grid grid-cols-4 gap-3">
+                            <div className="h-14 rounded-xl bg-slate-200" />
+                            <div className="h-14 rounded-xl bg-slate-200" />
+                            <div className="h-14 rounded-xl bg-slate-200" />
+                            <div className="h-14 rounded-xl bg-slate-200" />
+                        </div>
+                    </div>
+                    <div className="lg:col-span-6 space-y-6">
+                        <div className="h-6 w-32 bg-slate-200 rounded" />
+                        <div className="h-10 w-3/4 bg-slate-200 rounded" />
+                        <div className="h-16 w-full bg-slate-200 rounded" />
+                        <div className="h-28 w-full bg-slate-200 rounded-xl" />
+                        <div className="h-12 w-full bg-slate-200 rounded-xl" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+async function ProductDetailContent({ params }: PageProps) {
     const { slug } = await params;
     const product = getProductBySlug(slug);
 
@@ -122,7 +153,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
     return (
         <>
-            {/* Structured Data: Product & FAQPage */}
             <script
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdProduct) }}
@@ -137,5 +167,13 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 allProducts={allProducts}
             />
         </>
+    );
+}
+
+export default function ProductDetailPage({ params }: PageProps) {
+    return (
+        <Suspense fallback={<ProductLoadingSkeleton />}>
+            <ProductDetailContent params={params} />
+        </Suspense>
     );
 }
